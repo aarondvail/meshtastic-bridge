@@ -26,8 +26,13 @@ $ git clone <this repository> meshtastic-bridge
 $ cd meshtastic-bridge
 $ python3.15 -m venv .venv
 $ source .venv/bin/activate
-$ pip install -r requirements.txt
+$ python -m pip install -r requirements.txt
+$ python -m pip install --no-deps --ignore-requires-python -r requirements-meshtastic.txt
 ```
+
+The second command is needed because every `meshtastic` release so far declares `Requires-Python <3.15`. Its dependencies are listed in `requirements.txt`, so only meshtastic itself skips the version check.
+
+If `python3.15 -m venv` fails or the venv has no pip, run `python -m ensurepip --upgrade` inside the venv. On Debian/Ubuntu with a distro Python, also install that version's `-venv` package.
 
 `pyyaml` and `secp256k1` (used by the NoStr plugin) have no prebuilt Python 3.15 wheels yet, so a C toolchain plus `autoconf`, `automake`, `libtool` and `pkg-config` must be installed for `pip install` to succeed.
 

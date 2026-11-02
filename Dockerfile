@@ -15,11 +15,16 @@ RUN apt-get update \
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /build
-COPY requirements.txt .
-# Use `python -m pip` (never bare `pip`) and bootstrap pip if the image lacks it
-RUN python -m pip --version || python -m ensurepip --upgrade \
+COPY requirements.txt requirements-meshtastic.txt ./
+# Use `python -m pip` (never bare `pip`) and bootstrap pip if the image lacks it.
+# meshtastic declares Requires-Python <3.15. `pip wheel` filters it out even with
+# --ignore-requires-python, so its pure-Python wheel is downloaded as if for 3.14.
+# Everything else keeps pip's normal checks.
+RUN (python -m pip --version || python -m ensurepip --upgrade) \
     && python -m pip install -U pip \
-    && python -m pip wheel --wheel-dir /wheels -r requirements.txt
+    && python -m pip wheel --wheel-dir /wheels -r requirements.txt \
+    && python -m pip download --dest /wheels --no-deps --only-binary=:all: \
+        --python-version 3.14 -r requirements-meshtastic.txt
 
 # ---------------------------------------------------------------------------
 # Runtime stage
@@ -37,10 +42,13 @@ RUN useradd --system --uid 10001 --no-create-home --groups dialout bridge
 
 WORKDIR /code
 
-COPY requirements.txt .
+COPY requirements.txt requirements-meshtastic.txt ./
 RUN --mount=type=bind,from=build,source=/wheels,target=/wheels \
     (python -m pip --version || python -m ensurepip --upgrade) \
-    && python -m pip install --no-index --find-links=/wheels -r requirements.txt
+    && python -m pip install --no-index --find-links=/wheels -r requirements.txt \
+    && python -m pip install --no-index --find-links=/wheels --no-deps \
+        --ignore-requires-python -r requirements-meshtastic.txt \
+    && python -c "import meshtastic.tcp_interface, meshtastic.serial_interface, paho.mqtt.client, yaml, nostr.event"
 
 COPY main.py plugins.py ./
 

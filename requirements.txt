@@ -1,9 +1,21 @@
-# Verified against Python 3.15
+# Verified against Python 3.15.
+#
+# meshtastic itself is NOT listed here: every release so far declares
+# Requires-Python <3.15, so pip refuses it on 3.15. It is installed separately
+# from requirements-meshtastic.txt with --no-deps --ignore-requires-python
+# (see Dockerfile / README). Its runtime dependencies are pinned below instead,
+# so they still get pip's normal Python-version checks.
 haversine~=2.9
-meshtastic~=2.7.11
 pypubsub~=4.0
 requests~=2.34
 pyyaml~=6.0
 paho-mqtt~=2.1
 jwcrypto~=1.6
 nostr==0.0.2
+
+# meshtastic 2.7.11 runtime dependencies
+bleak>=0.22.3
+packaging>=24.0
+protobuf>=4.21.12
+pyserial>=3.5,<4.0
+tabulate>=0.9.0,<0.10.0

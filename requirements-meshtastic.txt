@@ -1,0 +1,4 @@
+# Installed with: python -m pip install --no-deps --ignore-requires-python -r requirements-meshtastic.txt
+# Upstream caps Requires-Python at <3.15; the bridge's test suite passes with it on 3.15.
+# Drop the override once a meshtastic release declares 3.15 support.
+meshtastic==2.7.11
