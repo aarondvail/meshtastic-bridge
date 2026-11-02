@@ -5,8 +5,8 @@
 // as-is; where your shared lib already provides an equivalent Docker build /
 // deploy step, swap it in at the marked SHARED-LIB lines.
 
-@Library('Vail_Industries_SharedLib') _
-    Vail-Industries_SharedLib {
+@Library('Vail-Industries-SharedLib') _
+    Vail_Industries_SharedLib {
         org = "Vail-Industries"
         repo_Name = "meshtastic-bridge"
         Jenkins_Node = "BuiltIn"
