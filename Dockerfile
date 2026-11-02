@@ -5,7 +5,8 @@ ARG PYTHON_VERSION=3.15.2
 # Build stage: compile wheels for packages with no prebuilt 3.15 wheel
 # (pyyaml, and secp256k1 for nostr, which builds a bundled libsecp256k1)
 # ---------------------------------------------------------------------------
-FROM python:${PYTHON_VERSION}-slim-trixie AS build
+#FROM python:${PYTHON_VERSION}-slim-trixie AS build
+FROM python:3-slim AS build
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
