@@ -1,5 +1,6 @@
 devices:
   - name: local
 pipelines:
-  - debugger:
-      log_level: info
+  debug:
+    - debugger:
+        log_level: info

@@ -1,7 +1,9 @@
-haversine
-meshtastic
-requests
-pyyaml
-paho-mqtt
-jwcrypto
-nostr
+# Verified against Python 3.15
+haversine~=2.9
+meshtastic~=2.7.11
+pypubsub~=4.0
+requests~=2.34
+pyyaml~=6.0
+paho-mqtt~=2.1
+jwcrypto~=1.6
+nostr==0.0.2

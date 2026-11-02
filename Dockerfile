@@ -1,22 +1,47 @@
-# set base image (host OS)
-FROM python:3.9
+# syntax=docker/dockerfile:1
+ARG PYTHON_VERSION=3.15.2
 
-# set the working directory in the container
+# ---------------------------------------------------------------------------
+# Build stage: compile wheels for packages with no prebuilt 3.15 wheel
+# (pyyaml, and secp256k1 for nostr, which builds a bundled libsecp256k1)
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim-trixie AS build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential autoconf automake libtool pkg-config libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install -U pip \
+    && pip wheel --wheel-dir /wheels -r requirements.txt
+
+# ---------------------------------------------------------------------------
+# Runtime stage
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim-trixie
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    BRIDGE_CONFIG=/code/config.yaml
+
+# Non-root user; dialout grants access to USB serial radios
+RUN useradd --system --uid 10001 --no-create-home --groups dialout bridge
+
 WORKDIR /code
 
-# copy the dependencies file to the working directory
 COPY requirements.txt .
+RUN --mount=type=bind,from=build,source=/wheels,target=/wheels \
+    pip install --no-index --find-links=/wheels -r requirements.txt
 
-RUN apt-get update && apt-get install -y cargo
+COPY main.py plugins.py ./
 
-# install dependencies
-RUN pip install -U pip
-RUN pip install setuptools_rust wheel
-RUN pip install -r requirements.txt
+USER bridge
 
-# copy the content of the local src directory to the working directory
-COPY main.py .
-COPY plugins.py .
-
-# command to run on container start
-CMD [ "python", "./main.py" ]
+# config.yaml is mounted at /code/config.yaml at run time
+CMD ["python", "main.py"]

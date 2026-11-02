@@ -7,8 +7,6 @@ mqtt_servers:
     server: localhost
     port: 1883
 
-
-
 pipelines:
   owntracks:
     - owntracks_plugin:
