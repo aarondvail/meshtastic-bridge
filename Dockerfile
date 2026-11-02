@@ -5,8 +5,7 @@ ARG PYTHON_VERSION=3.15.2
 # Build stage: compile wheels for packages with no prebuilt 3.15 wheel
 # (pyyaml, and secp256k1 for nostr, which builds a bundled libsecp256k1)
 # ---------------------------------------------------------------------------
-#FROM python:${PYTHON_VERSION}-slim-trixie AS build
-FROM python:3-slim AS build
+FROM python:${PYTHON_VERSION}-slim-trixie AS build
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -17,8 +16,10 @@ ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install -U pip \
-    && pip wheel --wheel-dir /wheels -r requirements.txt
+# Use `python -m pip` (never bare `pip`) and bootstrap pip if the image lacks it
+RUN python -m pip --version || python -m ensurepip --upgrade \
+    && python -m pip install -U pip \
+    && python -m pip wheel --wheel-dir /wheels -r requirements.txt
 
 # ---------------------------------------------------------------------------
 # Runtime stage
@@ -38,7 +39,8 @@ WORKDIR /code
 
 COPY requirements.txt .
 RUN --mount=type=bind,from=build,source=/wheels,target=/wheels \
-    pip install --no-index --find-links=/wheels -r requirements.txt
+    (python -m pip --version || python -m ensurepip --upgrade) \
+    && python -m pip install --no-index --find-links=/wheels -r requirements.txt
 
 COPY main.py plugins.py ./
 
